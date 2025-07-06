@@ -30,22 +30,31 @@ def fetch_fwbtin(driver, date, hour=15):
     elif hour == 14:
         file_name = f'fwbtin_raw_14'
     
-    
     driver.get(url)
 
-    # 使用 for 迴圈進行迭代
-    d = date.strftime('%Y/%m/%d')
-    str_d = date.strftime('%Y%m%d')
-    print(f"Fetching 三大法人資料 {d}...")
+
+    print(f"Fetching 三大法人資料...")
 
     # search
     max_retries = 3
     for attempt in range(max_retries):
         try:
             input_search = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[3]/div[2]/div[3]/div/div[3]/div/form/fieldset/ul/li[1]/div[2]/input")
-            input_search.clear()
-            input_search.send_keys(d)
-            driver.find_element(By.XPATH, '//*[@id="button"]').click()
+            # 獲取輸入框的預設值
+            original_value = input_search.get_attribute("value")
+            print(f"原始輸入框值: {original_value}")
+            if date is None:
+                print("日期為 None，使用預設值")
+                d = original_value
+                date = datetime.strptime(original_value, '%Y/%m/%d')
+                str_d = date.strftime('%Y%m%d')
+            else:
+                d = date.strftime('%Y/%m/%d')
+                str_d = date.strftime('%Y%m%d')
+            
+                input_search.clear()
+                input_search.send_keys(d)
+                driver.find_element(By.XPATH, '//*[@id="button"]').click()
             break  # 成功就跳出迴圈
         except Exception as e:
             print(f"查無資料, 網頁異常 => 重新搜尋 (第{attempt+1}次)")
@@ -54,9 +63,17 @@ def fetch_fwbtin(driver, date, hour=15):
         print("多次嘗試仍失敗，無法依照日期取得資料")
         return
     
+    
+    # 檢查該天檔案是否已存在
+    if not os.path.exists(os.path.join(os.path.abspath(os.getcwd()), 'history_data','tw',f'{file_name}', f'fwbtin_{str_d}.csv')):
+        print(f"檔案 {str_d} 不存在，繼續爬蟲")
+    else:
+        print(f"檔案 {str_d} 已存在，跳過爬蟲")
+        return
+    
     # 等待資料載入
     time.sleep(random.uniform(1, 3))   
-        
+    
     # 找到 table
     try:
         tbody = driver.find_element(By.TAG_NAME, 'table')
@@ -77,7 +94,8 @@ def fetch_fwbtin(driver, date, hour=15):
     path = os.path.join(os.path.abspath(os.getcwd()), 'history_data','tw',f'{file_name}', f'fwbtin_{str_d}.csv')
     os.makedirs(os.path.dirname(path), exist_ok=True)
     df.to_csv(path, mode='w', encoding='utf-8', index=False)
-    print("成功取得三大法人資料 => ", end='')
+    print(f"成功取得三大法人資料 => 資料日期: {date}")
+    return date
 
 def write_data_handler(df, path):
     # 定義完整的欄位順序，寫入資料
@@ -229,8 +247,10 @@ def calculated_data_process(date, hour=15):
         
 def crawler(date, hour=15):
     driver = webdriver.Chrome()
-    fetch_fwbtin(driver, date, hour)
+    date = fetch_fwbtin(driver, date, hour)
     driver.quit()
+    
+    return date
     
 
 

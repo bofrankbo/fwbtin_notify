@@ -7,3 +7,8 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(setup_schedule())  # 啟動排程（需要 async 執行）
     bot_app.run_polling()  # 由 telegram bot 自己開 event loop
+
+# from fwbtin_daily import crawler
+
+# if __name__ == "__main__":
+#     crawler(None, 6)  # 呼叫函數來抓取資料
