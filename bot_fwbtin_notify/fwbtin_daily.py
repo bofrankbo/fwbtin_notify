@@ -282,6 +282,17 @@ def crawler(date, hour=15):
 #     start_date += timedelta(days=1)
 # ================================ 以上測試用 ================================ 
 
+# start_date = datetime(2025, 1, 3)
+# end_date = datetime(2025, 6, 20)
+
+# while start_date <= end_date:
+#     print(f"處理 {start_date.strftime('%Y%m%d')} 資料")
+#     driver = webdriver.Chrome()
+#     fetch_fwbtin(driver, start_date, 6)
+#     fetch_fwbtin(driver, start_date, 14)
+#     driver.quit()
+#     start_date += timedelta(days=1)
+
 # 這行是給 scheduler 用的
 __all__ = [
     "calculated_data_process",
